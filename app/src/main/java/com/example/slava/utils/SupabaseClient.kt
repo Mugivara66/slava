@@ -40,36 +40,41 @@ class SupabaseClient : ViewModel() {
     private val _ratingItems = MutableStateFlow<List<RatingItem>>(emptyList())
     val ratingItems: StateFlow<List<RatingItem>> get() = _ratingItems
 
+    // Инициализация Supabase клиента с конфигурацией
     private val supabase = createSupabaseClient(
         supabaseUrl = "https://ycybrdkzpztnwhobwwrg.supabase.co",
         supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InljeWJyZGt6cHp0bndob2J3d3JnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI3NzA2MzEsImV4cCI6MjA0ODM0NjYzMX0.EeDaj5f8z8q-jYphPDN2fd5QSDXTsS_E_qc__85-EPs"
     ) {
-        install(Auth)
+        install(Auth)     
         install(Postgrest)
-        install(Storage)
-        defaultSerializer = KotlinXSerializer(Json)
+        install(Storage)   
+        defaultSerializer = KotlinXSerializer(Json) // Настройка сериализатора
     }
 
-    // Авторизация
+    // Функция авторизации пользователя
     suspend fun login(
         context: Context,
         userEmail: String,
         userPassword: String
     ): Result<Boolean> {
         return try {
+            // Попытка входа через email и пароль
             supabase.auth.signInWith(Email) {
                 email = userEmail
                 password = userPassword
             }
-            saveToken(context)
-            Result.success(true)
+            saveToken(context) // Сохранение токена после успешной авторизации
+            Result.success(true) // Возвращаем успешный результат
         } catch (e: AuthRestException) {
+            // Обработка ошибок аутентификации с переводом кода ошибки
             val errorMessage = translateError(e.errorCode?.value, e.message)
             Result.failure(Exception(errorMessage))
         } catch (e: Exception) {
+            // Обработка любых других исключений
             Result.failure(Exception("Неизвестная ошибка: ${e.message}"))
         }
     }
+}
 
     // Регистрация
     suspend fun signup(
